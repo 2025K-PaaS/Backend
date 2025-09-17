@@ -1,0 +1,50 @@
+# Python 기본
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.log
+*.sqlite3
+*.sqlite
+*.db
+*.tmp
+
+# 가상환경
+venv/
+kvenv/
+.env/
+.venv/
+.env.bak/
+env/
+ENV/
+env.bak/
+*.env
+
+# IDE/에디터
+.vscode/
+.idea/
+*.swp
+*.swo
+*.bak
+
+# 시스템 파일
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# FastAPI/Starlette
+*.db-journal
+instance/
+app.db
+
+# Alembic (마이그레이션 로그 캐시)
+alembic/versions/*.pyc
+alembic/__pycache__/
+
+# 파이썬 빌드
+build/
+dist/
+*.egg-info/
+
+# 기타
+test_results/
