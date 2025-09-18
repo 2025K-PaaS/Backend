@@ -38,6 +38,7 @@ instance/
 app.db
 
 # Alembic (마이그레이션 로그 캐시)
+db/migrations/versions/
 alembic/versions/*.pyc
 alembic/__pycache__/
 
@@ -48,3 +49,4 @@ dist/
 
 # 기타
 test_results/
+

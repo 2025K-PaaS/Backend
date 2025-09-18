@@ -2,7 +2,7 @@
 
 import enum
 from sqlalchemy import String, Integer, DateTime, func, Enum, UniqueConstraint
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from db.base import Base
 
 class UserRole(str, enum.Enum):
@@ -26,3 +26,6 @@ class User(Base):
 
     created_at: Mapped["DateTime"] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped["DateTime"] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    point_wallet = relationship("PointWallet", uselist=False, back_populates="user")
+    point_ledger = relationship("PointLedger", back_populates="user")
