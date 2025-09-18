@@ -1,21 +1,23 @@
 # db/migrations/env.py
-from logging.config import fileConfig
-from alembic import context
-from sqlalchemy import engine_from_config, pool
-from core.config import settings
-from db.base import Base
 
-from models import user 
+from logging.config import fileConfig
+from sqlalchemy import create_engine, pool 
+from alembic import context
+from datetime import timezone 
+from core.config import settings
+from models import Base
 
 config = context.config
+
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
 target_metadata = Base.metadata
+sync_url = settings.DATABASE_URL.replace("aiomysql", "pymysql")
 
+# offline migration
 def run_migrations_offline() -> None:
-    url = config.get_main_option("sqlalchemy.url")
+    url = settings.DATABASE_URL 
     context.configure(
         url=url,
         target_metadata=target_metadata,
@@ -23,16 +25,18 @@ def run_migrations_offline() -> None:
         compare_type=True,
         compare_server_default=True,
     )
+
     with context.begin_transaction():
         context.run_migrations()
 
+# online migration
 def run_migrations_online() -> None:
-    connectable = engine_from_config(
-        config.get_section(config.config_ini_section),
-        prefix="",
+    connectable = create_engine( 
+        sync_url,
         poolclass=pool.NullPool,
         future=True,
     )
+
     with connectable.connect() as connection:
         context.configure(
             connection=connection,
@@ -40,8 +44,10 @@ def run_migrations_online() -> None:
             compare_type=True,
             compare_server_default=True,
         )
+
         with context.begin_transaction():
             context.run_migrations()
+
 
 if context.is_offline_mode():
     run_migrations_offline()
