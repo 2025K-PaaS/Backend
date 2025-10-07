@@ -1,7 +1,6 @@
 # services/point_service.py
-
 from sqlalchemy.orm import Session
-from sqlalchemy import select, update
+from sqlalchemy import select
 from models.point import PointWallet, PointLedger
 
 def _get_or_create_wallet(db: Session, user_id: int) -> PointWallet:
@@ -9,7 +8,7 @@ def _get_or_create_wallet(db: Session, user_id: int) -> PointWallet:
     if not wallet:
         wallet = PointWallet(user_id=user_id, balance=0)
         db.add(wallet)
-        db.flush()  
+        db.flush()  # no commit here
     return wallet
 
 def get_balance(db: Session, user_id: int) -> int:
@@ -34,13 +33,16 @@ def award(
     ref_id: str | None = None,
     idempotency_key: str | None = None,
 ) -> int:
+    """
+    NOTE: 이 함수는 COMMIT하지 않습니다. 호출자가 commit 하세요.
+    """
     if amount == 0:
         return get_balance(db, user_id)
 
-    # 이미 같은 키로 적립된 적이 있으면 스킵
+    # idempotency 검사 (SQLAlchemy 2.x 스타일)
     if idempotency_key:
-        exists = db.query(PointLedger).filter_by(idempotency_key=idempotency_key).first()
-        if exists:
+        exists_stmt = select(PointLedger.id).where(PointLedger.idempotency_key == idempotency_key).limit(1)
+        if db.execute(exists_stmt).scalar() is not None:
             return get_balance(db, user_id)
 
     wallet = _get_or_create_wallet(db, user_id)
@@ -55,5 +57,5 @@ def award(
         idempotency_key=idempotency_key,
     )
     db.add(entry)
-    db.flush()
+    db.flush()  # keep uncommitted
     return int(wallet.balance)
