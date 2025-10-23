@@ -6,7 +6,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from db.base import Base
 
 class UserRole(str, enum.Enum):
-    user = "user"           # 확장 대비 기본값
+    user = "user"     
 
 class User(Base):
     __tablename__ = "users"
@@ -29,3 +29,5 @@ class User(Base):
 
     point_wallet = relationship("PointWallet", uselist=False, back_populates="user")
     point_ledger = relationship("PointLedger", back_populates="user")
+    
+    requests = relationship("Request", back_populates="user")

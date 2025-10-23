@@ -1,14 +1,13 @@
+# services/auth_service.py
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
-
 from models.user import User
 from repositories.user_repo import UserRepository
 from core.security import get_password_hash, verify_password, create_access_token
 from schemas.auth import SignUpIn
-from typing import Optional
 
 class AuthService:
-    def __init__(self): 
+    def __init__(self):
         self.users = UserRepository()
 
     # 회원가입

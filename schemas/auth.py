@@ -1,6 +1,6 @@
 # schemas/auth.py
 
-from typing import Annotated
+from typing import Annotated, Literal
 from pydantic import BaseModel, Field
 
 UsernameStr = Annotated[str, Field(min_length=3, max_length=50)]
@@ -12,8 +12,8 @@ class SignUpIn(BaseModel):
     username: UsernameStr
     password: PasswordStr
     name: NameStr
-    phone: str 
-    nickname: NickStr 
+    phone: str
+    nickname: NickStr
 
 class LoginIn(BaseModel):
     username: str
@@ -21,4 +21,4 @@ class LoginIn(BaseModel):
 
 class Token(BaseModel):
     access_token: str = Field(..., description="JWT access token")
-    token_type: str = "bearer"
+    token_type: Literal["bearer"] = "bearer"

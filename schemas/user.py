@@ -1,5 +1,6 @@
 # schemas/user.py
-from pydantic import BaseModel
+
+from pydantic import BaseModel, ConfigDict
 from models.user import UserRole
 
 class UserOut(BaseModel):
@@ -9,6 +10,4 @@ class UserOut(BaseModel):
     phone: str | None
     nickname: str | None
     role: UserRole
-
-    class Config:
-        from_attributes = True  # SQLAlchemy -> Pydantic v2
+    model_config = ConfigDict(from_attributes=True)  # Pydantic v2

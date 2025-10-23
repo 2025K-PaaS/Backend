@@ -4,3 +4,4 @@ from db.base import Base
 
 from .user import User
 from .point import PointWallet, PointLedger
+from models.request import Request
