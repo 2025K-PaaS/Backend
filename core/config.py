@@ -16,21 +16,27 @@ class Settings(BaseSettings):
     # JWT
     JWT_SECRET: str = Field("dev-secret", validation_alias=AliasChoices("JWT_SECRET", "jwt_secret"))
     JWT_ALGORITHM: str = Field("HS256", validation_alias=AliasChoices("JWT_ALGORITHM", "jwt_algorithm"))
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(60, validation_alias=AliasChoices("ACCESS_TOKEN_EXPIRE_MINUTES", "access_token_expire_minutes"))
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(
+        60, validation_alias=AliasChoices("ACCESS_TOKEN_EXPIRE_MINUTES", "access_token_expire_minutes")
+    )
 
     # CORS
-    CORS_ORIGINS: List[str] = Field(default=["http://localhost:3000"], validation_alias=AliasChoices("CORS_ORIGINS", "cors_origins"))
+    CORS_ORIGINS: List[str] = Field(
+        default=["http://localhost:3000"],
+        validation_alias=AliasChoices("CORS_ORIGINS", "cors_origins")
+    )
 
     # Admin
     ADMIN_API_KEY: str = Field("dev-admin-key", validation_alias=AliasChoices("ADMIN_API_KEY", "admin_api_key"))
 
-    # AI 서버 (명세: POST /v1/analysis/image)
-    AI_API_BASE: str = Field("http://localhost:8001", validation_alias=AliasChoices("AI_API_BASE", "ai_api_base"))
-    SERVER_ONLY_AI_API_KEY: str = Field("dev-ai-key", validation_alias=AliasChoices("SERVER_ONLY_AI_API_KEY", "server_only_ai_api_key"))
-
-    @property
-    def AI_ANALYSIS_URL(self) -> str:
-        return self.AI_API_BASE.rstrip("/") + "/v1/analysis/image"
+    # AI 서버 (명세: POST /analysis/image, POST /resources ...)
+    AI_API_BASE: str = Field(
+        "http://localhost:8001",
+        validation_alias=AliasChoices("AI_API_BASE", "AI_API_BASE_URL", "ai_api_base", "ai_api_base_url"),
+    )
+    SERVER_ONLY_AI_API_KEY: str = Field(
+        "", validation_alias=AliasChoices("SERVER_ONLY_AI_API_KEY", "AI_API_TOKEN", "server_only_ai_api_key", "ai_api_token")
+    )
 
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod

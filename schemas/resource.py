@@ -1,13 +1,15 @@
 # schemas/resource.py
-
 from enum import Enum
-from pydantic import BaseModel, Field
 from typing import Optional, List
+
+from pydantic import BaseModel, Field
+
 
 class ResourceStatus(str, Enum):
     registered = "registered"
-    matched    = "matched"
-    completed  = "completed"
+    matched = "matched"
+    completed = "completed"
+
 
 class ResourceCreateIn(BaseModel):
     analysis_id: str
@@ -17,28 +19,32 @@ class ResourceCreateIn(BaseModel):
     unit: str
     value: int = Field(ge=0)
 
+
 class MatchedRequest(BaseModel):
-    request_id: int
+    request_id: str                
     wanted_item: str
-    material_type: str | None = None
+    material_type: Optional[str] = None
     desired_amount: float
     unit: str
 
+
 class ResourceCreateOut(BaseModel):
-    resource_id: int
-    status: ResourceStatus | str 
+    resource_id: str               
+    status: ResourceStatus | str
     message: str
     matched_requests: List[MatchedRequest] = Field(default_factory=list)
 
+
 class ResourceRow(BaseModel):
-    resource_id: int
+    resource_id: str             
     title: str
-    material_type: str | None = None
+    material_type: Optional[str] = None
     amount: float
     unit: str
     value: int
     status: ResourceStatus | str
 
+
 class ResourceListOut(BaseModel):
-    resources: list[ResourceRow]
+    resources: List[ResourceRow]
     total: int
