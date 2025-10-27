@@ -22,13 +22,12 @@ def _base() -> str:
 
 def analyze_image(image_file, username: str) -> Dict[str, Any]:
     files = {
-        "file": (
+        "image": (
             image_file.filename,
             image_file.file,
             getattr(image_file, "content_type", None) or "application/octet-stream",
         )
     }
-
     data = {"username": username}
     image_file.file.seek(0)
 
@@ -44,32 +43,40 @@ def analyze_image(image_file, username: str) -> Dict[str, Any]:
 
 def register_resource(
     *,
-    analysis_id: str,
+    analysis_id: Optional[str] = None,   
     title: Optional[str] = None,
     description: Optional[str] = None,
     amount: Optional[float] = None,
     unit: Optional[str] = None,
     value: Optional[int] = None,
-    username: Optional[str] = None,  
+    username: Optional[str] = None,
+    material_type: Optional[str] = None,
+    condition: Optional[str] = None,
+    tags: Optional[List[str]] = None,
 ) -> Dict[str, Any]:
     payload = {
-        "analysis_id": analysis_id,
         "title": title,
         "description": description,
         "amount": amount,
         "unit": unit,
         "value": value,
-        "username": username,  
+        "username": username,
+        "material_type": material_type,
+        "condition": condition,
+        "tags": tags,
     }
+    if analysis_id:                
+        payload["analysis_id"] = analysis_id
+
     payload = {k: v for k, v in payload.items() if v is not None}
 
     with httpx.Client(timeout=30.0) as client:
         r = client.post(
-            f"{_base()}/resources", 
+            f"{settings.AI_API_BASE.rstrip('/')}/resources",
             headers={**_headers(), "Content-Type": "application/json"},
             json=payload,
         )
-        print("[DEBUG AI RESPONSE]", r.status_code, r.text)  
+        print("[DEBUG AI RESPONSE]", r.status_code, r.text)
         r.raise_for_status()
         return _ensure_dict(r.json())
 
@@ -95,7 +102,7 @@ def list_resource(
             url2 = f"{_base()}/resources/user/{username}"
             r = client.get(url2, headers=_headers(), params=params)
             print("FALLBACK GET", url2, params, "=>", r.status_code)
-      
+
         if r.status_code in (307, 308):
             loc = r.headers.get("Location")
             if loc:
@@ -103,7 +110,6 @@ def list_resource(
                 r = client.get(loc, headers=_headers())
 
         r.raise_for_status()
-
         try:
             data = r.json()
         except Exception as e:
@@ -119,7 +125,6 @@ def list_resource(
             return data
 
         raise ValueError(f"AI 서버 응답 형식 오류: {type(data)}")
-    
 
 def create_request_on_ai(payload: Dict[str, Any]) -> Dict[str, Any]:
     with httpx.Client(timeout=20.0) as client:
@@ -130,7 +135,10 @@ def create_request_on_ai(payload: Dict[str, Any]) -> Dict[str, Any]:
         )
         r.raise_for_status()
         data = r.json()
-
         if isinstance(data, list):
-            return {"request_id": data[0].get("request_id"), "status": data[0].get("status"), "message": data[0].get("message")}
+            return {
+                "request_id": data[0].get("request_id"),
+                "status": data[0].get("status"),
+                "message": data[0].get("message"),
+            }
         return data

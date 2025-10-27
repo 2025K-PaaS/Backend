@@ -50,3 +50,9 @@ dist/
 # 기타
 test_results/
 
+contest103-key.pem
+eeum-back.pem
+Dockerfile
+k8s/
+.dockerignore
+start.sh

@@ -14,6 +14,7 @@ class SignUpIn(BaseModel):
     name: NameStr
     phone: str
     nickname: NickStr
+    address: str = Field(..., description="사용자 배송지 주소")
 
 class LoginIn(BaseModel):
     username: str

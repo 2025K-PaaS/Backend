@@ -15,9 +15,12 @@ class ResourceCreateIn(BaseModel):
     analysis_id: str
     title: str = Field(min_length=1, max_length=100)
     description: Optional[str] = Field(default=None, max_length=300)
-    amount: float = Field(ge=0)
-    unit: str
-    value: int = Field(ge=0)
+    amount: Optional[float] = None
+    unit: Optional[str] = None
+    value: Optional[int] = None
+    material_type: Optional[str] = None
+    condition: Optional[str] = None
+    tags: Optional[List[str]] = None
 
 
 class MatchedRequest(BaseModel):

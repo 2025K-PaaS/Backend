@@ -7,6 +7,7 @@ from core.config import settings
 from db.session import engine
 from db.base import Base
 from routers import auth, users, points, resources, requests as requests_router
+from routers import analysis as analysis_router
 
 app = FastAPI(title="Circular Economy API - Auth", version="0.1.0")
 
@@ -24,6 +25,7 @@ app.include_router(users.router)
 app.include_router(points.router)
 app.include_router(resources.router)
 app.include_router(requests_router.router)
+app.include_router(analysis_router.router)
 
 @app.get("/", tags=["health"])
 def health():
