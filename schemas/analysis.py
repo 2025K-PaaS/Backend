@@ -1,9 +1,9 @@
-# schemas\analysis.py
-
+# schemas/analysis.py
+from typing import Any, Dict, Optional
 from pydantic import BaseModel
 
-class AnalysisOut(BaseModel):
+class AnalysisCreateOut(BaseModel):
     analysis_id: str
-    detected_item: str | None = None
-    material_type: str | None = None
-    suggested_title: str | None = None
+    extracted: Dict[str, Any] 
+    image_url: Optional[str] = None
+    status: str = "pending"

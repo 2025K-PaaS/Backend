@@ -13,11 +13,11 @@ class AuthService:
     # 회원가입
     def signup(self, db: Session, body: SignUpIn) -> User:
         if self.users.get_by_username(db, body.username):
-            raise HTTPException(status_code=409, detail="Username already exists")
+            raise HTTPException(status_code=409, detail="이미 사용 중인 아이디입니다.")
         if body.nickname and self.users.get_by_nickname(db, body.nickname):
-            raise HTTPException(status_code=409, detail="Nickname already exists")
+            raise HTTPException(status_code=409, detail="이미 사용 중인 닉네임입니다.")
         if body.phone and self.users.get_by_phone(db, body.phone):
-            raise HTTPException(status_code=409, detail="Phone already exists")
+            raise HTTPException(status_code=409, detail="이미 등록된 전화번호입니다.")
 
         user = User(
             username=body.username,
@@ -25,6 +25,7 @@ class AuthService:
             name=body.name,
             phone=body.phone,
             nickname=body.nickname,
+            address=body.address,
         )
         return self.users.create(db, user)
 
@@ -32,7 +33,7 @@ class AuthService:
     def authenticate(self, db: Session, username: str, password: str) -> User:
         user = self.users.get_by_username(db, username)
         if not user or not verify_password(password, user.hashed_password):
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="아이디 또는 비밀번호가 올바르지 않습니다.")
         return user
 
     # 토큰 발급

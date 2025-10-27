@@ -3,6 +3,7 @@ from typing import Any, Dict, List, Tuple, Optional
 
 from sqlalchemy.orm import Session
 from models.user import User
+from models.analysis import Analysis
 from services.ai_client import (
     analyze_image,
     register_resource,
@@ -10,32 +11,33 @@ from services.ai_client import (
     _ensure_dict,
 )
 
-def auto_create_from_image(
+def finalize_resource(
     *,
+    db: Session,
     user: User,
-    image_file,
+    analysis_id: str,
     title: Optional[str] = None,
     description: Optional[str] = None,
     amount: Optional[float] = None,
     unit: Optional[str] = None,
     value: Optional[int] = None,
-) -> Tuple[Optional[Dict[str, Any]], Dict[str, Any]]:
+    material_type: Optional[str] = None,
+    condition: Optional[str] = None,
+    tags: Optional[List[str]] = None,
+) -> Dict[str, Any]:
+    # 1) 소유권 검증: 로컬 Analysis 테이블에서 확인
+    anal = (
+        db.query(Analysis)
+        .filter(
+            Analysis.ai_analysis_id == analysis_id,
+            Analysis.username == user.username,
+        )
+        .first()
+    )
+    if not anal:
+        raise ValueError("유효하지 않거나 소유자가 아닌 analysis_id 입니다.")
 
-    ai_resp_raw = analyze_image(image_file=image_file, username=user.username)
-    ai_resp = _ensure_dict(ai_resp_raw)
-    if ai_resp.get("resource_id"):
-        return None, ai_resp
-
-    analysis_id = ai_resp.get("analysis_id")
-    if not analysis_id:
-        raise ValueError("AI 응답에 analysis_id도 resource_id도 없습니다.")
-
-    title = title or ai_resp.get("detected_item") or "Auto Resource"
-    amount = amount if amount is not None else ai_resp.get("amount")
-    unit = unit or ai_resp.get("unit")
-    if value is None:
-        value = ai_resp.get("estimated_value") or ai_resp.get("value")
-
+    # 2) AI 서버에 최종 등록 위임
     created = register_resource(
         analysis_id=analysis_id,
         title=title,
@@ -44,8 +46,21 @@ def auto_create_from_image(
         unit=unit,
         value=value,
         username=user.username,
+        material_type=material_type,
+        condition=condition,
+        tags=tags,
     )
-    return ai_resp, created
+
+    # 3) (선택) 상태 마킹: Analysis에 status 필드가 있다면 used 로 갱신
+    if hasattr(anal, "status"):
+        try:
+            anal.status = "used"
+            db.add(anal)
+            db.commit()
+        except Exception:
+            db.rollback()
+
+    return created
 
 # 로그인 사용자의 자원 목록 조회
 def list_by_username(username: str) -> Tuple[List[Dict[str, Any]], int]:
@@ -88,7 +103,7 @@ def list_all_resources(
                 else:
                     aggregated.append(r)
         except Exception as e:
-            print(f"[WARN] list_resource failed for user={uname}: {e}")
+            print(f"[경고] 사용자 {uname}의 자원 목록 조회에 실패했습니다: {e}")
 
     def pass_filter(rec: Dict[str, Any]) -> bool:
         if material_type and rec.get("material_type") != material_type:

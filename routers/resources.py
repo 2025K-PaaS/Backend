@@ -3,8 +3,9 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Q
 from sqlalchemy.orm import Session
 
 from core.deps import get_db, get_current_user
-from services.resource_service import auto_create_from_image, list_by_username, list_all_resources
+from services.resource_service import finalize_resource, list_by_username, list_all_resources
 from schemas.resource import (
+    ResourceCreateIn,  
     ResourceCreateOut,
     MatchedRequest,
     ResourceListOut,
@@ -13,36 +14,35 @@ from schemas.resource import (
 
 router = APIRouter(prefix="/resources", tags=["resources"])
 
-@router.post("", response_model=ResourceCreateOut)
+@router.post("", response_model=ResourceCreateOut, status_code=201)
 def create_resource(
-    image: UploadFile = File(...),
-    title: str | None = Form(None),
-    description: str | None = Form(None),
-    amount: float | None = Form(None),
-    unit: str | None = Form(None),
-    value: int | None = Form(None),
+    payload: ResourceCreateIn,
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
     try:
-        analysis, created = auto_create_from_image(
+        resp = finalize_resource(
+            db=db,
             user=current_user,
-            image_file=image,
-            title=title,
-            description=description,
-            amount=amount,
-            unit=unit,
-            value=value,
+            analysis_id=payload.analysis_id,
+            title=payload.title,
+            description=payload.description,
+            amount=payload.amount,
+            unit=payload.unit,
+            value=payload.value,
+            material_type=payload.material_type,
+            condition=payload.condition,
+            tags=payload.tags,
         )
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-
-    resp = created
 
     return ResourceCreateOut(
         resource_id=resp.get("resource_id"),
         status=resp.get("status", "registered"),
-        message=resp.get("message", "자원이 등록되었습니다."),
+        message=resp.get("message", "자원이 성공적으로 등록되었습니다."),
         matched_requests=[
             MatchedRequest(
                 request_id=m.get("request_id"),
@@ -50,10 +50,10 @@ def create_resource(
                 material_type=m.get("material_type"),
                 desired_amount=m.get("desired_amount"),
                 unit=m.get("unit"),
-            )
-            for m in (resp.get("matched_requests") or [])
+            ) for m in (resp.get("matched_requests") or [])
         ],
     )
+
 
 # 로그인한 사용자의 자원 목록 조회
 @router.get("/myresource", response_model=ResourceListOut)

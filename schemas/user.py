@@ -9,5 +9,6 @@ class UserOut(BaseModel):
     name: str
     phone: str | None
     nickname: str | None
+    address: str | None
     role: UserRole
-    model_config = ConfigDict(from_attributes=True)  # Pydantic v2
+    model_config = ConfigDict(from_attributes=True)  
