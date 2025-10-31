@@ -1,10 +1,8 @@
 ---
 
-<p align="center">
-  <img src="https://github.com/organizations/2025K-PaaS/settings/profile" width="110" alt="Project banner" />
-</p>
+<p align="center"> <img src="https://github.com/2025K-PaaS.png" width="110" alt="Project banner" /> </p>
 
-<h1 align="center">eeum • Backend</h1>
+<h1 align="center">이음 • Backend</h1>
 <p align="center">
   <img src="https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white">
   <img src="https://img.shields.io/badge/MySQL-4479A1?logo=mysql&logoColor=white">
