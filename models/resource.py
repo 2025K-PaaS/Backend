@@ -20,13 +20,13 @@ class Resource(Base):
     title = Column(String(100), nullable=False)
     description = Column(Text)
     amount = Column(Float, nullable=False, default=0)
-    unit = Column(String(10), nullable=False)          # "개","kg","g"
-    value = Column(Integer, nullable=False, default=0) # 예상가치(원)
+    unit = Column(String(10), nullable=True)
+    value = Column(Integer, nullable=False, default=0) 
 
     detected_item = Column(String(100), index=True)
     material_type = Column(String(50), index=True)
     status = Column(
-        Enum(ResourceStatus, native_enum=False),       # SQLite 호환 위해 native_enum=False
+        Enum(ResourceStatus, native_enum=False),   
         nullable=False,
         default=ResourceStatus.registered,
         server_default=ResourceStatus.registered.value,
@@ -37,5 +37,4 @@ class Resource(Base):
 
     analysis = relationship("Analysis")
 
-# 자주 거르는 칼럼에 인덱스 권장
 Index("ix_resources_unit_status", Resource.unit, Resource.status)

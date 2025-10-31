@@ -12,20 +12,28 @@ class PointBalanceOut(BaseModel):
 class PointHistoryItem(BaseModel):
     id: int
     delta: int
-    reason: str
     ref_type: Optional[str] = None
     ref_id: Optional[str] = None
+    item_title: Optional[str] = None  
+    item_amount: Optional[float] = None     
     created_at: datetime
 
+    @property
+    def safe_item_title(self) -> str:
+        return self.item_title or "관리자 지급"
+    
     class Config:
         from_attributes = True
+
 
 class PointHistoryOut(BaseModel):
     items: List[PointHistoryItem]
     next_before_id: Optional[int] = None
 
+class PointHistoryAllOut(PointBalanceOut):
+    items: List[PointHistoryItem]
+    
 class GrantPointsIn(BaseModel):
     user_id: int
     amount: int = Field(..., ge=-1_000_000, le=1_000_000)
-    reason: str = "admin_grant"
     idempotency_key: Optional[str] = None

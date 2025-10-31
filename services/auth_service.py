@@ -5,6 +5,7 @@ from models.user import User
 from repositories.user_repo import UserRepository
 from core.security import get_password_hash, verify_password, create_access_token
 from schemas.auth import SignUpIn
+from services import point_service 
 
 class AuthService:
     def __init__(self):
@@ -27,7 +28,27 @@ class AuthService:
             nickname=body.nickname,
             address=body.address,
         )
-        return self.users.create(db, user)
+        created_user = self.users.create(db, user)
+
+        try:
+            point_service.award(
+                db=db,
+                user_id=created_user.id,
+                amount=500,
+                ref_type="system",
+                ref_id="signup_bonus",
+                item_title="회원가입 축하 포인트",
+                item_amount=1,
+                idempotency_key=f"signup-{created_user.id}",
+            )
+            db.commit()
+            print(f"[포인트 지급] {created_user.username} 가입 축하 +500P")
+        except Exception as e:
+            db.rollback()
+            print(f"[경고] 포인트 지급 실패: {e}")
+
+        return created_user
+    
 
     # 로그인
     def authenticate(self, db: Session, username: str, password: str) -> User:
