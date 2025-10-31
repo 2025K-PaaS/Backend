@@ -56,3 +56,4 @@ Dockerfile
 k8s/
 .dockerignore
 start.sh
+alembic.ini
