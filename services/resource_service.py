@@ -68,7 +68,7 @@ def finalize_resource(
         matched_request_id=matched_request_id,
         image_path=image_path,
     )
-    print("[🔥 AI 요청 응답]", created)  
+    print("AI 요청 응답->", created)  
 
     if hasattr(anal, "status"):
         try:
@@ -163,7 +163,6 @@ def award_points_if_matched(
     request_id: Optional[str] = None,
     allow_on_accept: bool = False,
 ):
-    # 1) 매칭 상태 조회 (resource→request 순)
     match_data: Dict[str, Any] = {}
     try:
         match_data = get_match_by_resource(resource_id)
@@ -190,10 +189,8 @@ def award_points_if_matched(
         if not allow_on_accept:
             print(f"[스킵] 상태 불일치 state={state}")
             return None
-        # confirm 직후 강행 모드
         state = "accepted"
 
-    # 2) 식별자/username
     matched_resource_id = (
         req_info.get("matched_resource_id")
         or res_info.get("resource_id")
@@ -202,15 +199,12 @@ def award_points_if_matched(
     supplier_username = res_info.get("username")
     requester_username = req_info.get("username")
 
-    # 3) value 해석 (여러 경로 보강)
     value, value_src = 0, None
 
-    # 3-1) match.resource.value
     v0 = res_info.get("value")
     if v0 is not None:
         value = _to_int(v0, 0); value_src = "match.resource.value"
 
-    # 3-2) list_resource(supplier)에서 해당 resource_id
     if (value <= 0) and supplier_username:
         try:
             data = list_resource(username=supplier_username, limit=1000, offset=0)
@@ -221,13 +215,11 @@ def award_points_if_matched(
                     v1 = r.get("value")
                     if v1 is not None:
                         value = _to_int(v1, 0); value_src = "list_resource.value"
-                    # 비어있을 수도 있으니 username도 보강
                     supplier_username = r.get("username") or supplier_username
                     break
         except Exception as e:
             print(f"[경고] list_resource 실패: {e}")
 
-    # 3-3) get_all_resources()
     if value <= 0:
         try:
             for r in get_all_resources():
@@ -241,7 +233,7 @@ def award_points_if_matched(
         except Exception as e:
             print(f"[경고] get_all_resources 실패: {e}")
 
-    # 3-4) 기본 포인트
+    # 기본 포인트
     if value <= 0:
         value = int(settings.MATCH_DEFAULT_POINT or 0)
         value_src = "default_point"
@@ -250,16 +242,14 @@ def award_points_if_matched(
         print(f"[스킵] value 해석 실패 (resource_id={matched_resource_id})")
         return None
 
-    # 4) 요청자 username 보강
     if not requester_username and request_id:
         req_obj = get_by_id_from_ai(request_id, status=None)
         if req_obj:
             requester_username = req_obj.get("username")
-            # 타이틀/수량 보강
             req_info.setdefault("item_name", req_obj.get("item_name"))
             req_info.setdefault("amount", req_obj.get("amount"))
 
-    # 5) 유저 resolve
+    # 유저 resolve
     supplier = db.query(User).filter_by(username=supplier_username).first() if supplier_username else None
     requester = db.query(User).filter_by(username=requester_username).first() if requester_username else None
     if not supplier or not requester:
@@ -269,11 +259,11 @@ def award_points_if_matched(
     item_title = (req_info.get("item_name")) or "자원 매칭"
     item_amount = _parse_amount(req_info.get("amount"))
 
-    # 6) 양쪽(중복 제거) 지급
+    # 양쪽(중복 제거) 지급
     try:
         seen = set()
         for u in [supplier, requester]:
-            if u.id in seen:  # self-match 방지
+            if u.id in seen: 
                 continue
             seen.add(u.id)
             point_service.award(

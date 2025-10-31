@@ -34,7 +34,6 @@ class Settings(BaseSettings):
         None,
         validation_alias=AliasChoices("PUBLIC_BASE_URL", "BACKEND_PUBLIC_BASE", "PUBLIC_URL"),
     )
-    # AI 서버 (명세: POST /analysis/image, POST /resources ...)
     AI_API_BASE: str = Field(
         "http://localhost:8001",
         validation_alias=AliasChoices("AI_API_BASE", "AI_API_BASE_URL", "ai_api_base", "ai_api_base_url"),
