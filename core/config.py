@@ -28,7 +28,12 @@ class Settings(BaseSettings):
 
     # Admin
     ADMIN_API_KEY: str = Field("dev-admin-key", validation_alias=AliasChoices("ADMIN_API_KEY", "admin_api_key"))
-
+    
+    UPLOAD_DIR: str = Field("uploads")
+    PUBLIC_BASE_URL: str | None = Field(
+        None,
+        validation_alias=AliasChoices("PUBLIC_BASE_URL", "BACKEND_PUBLIC_BASE", "PUBLIC_URL"),
+    )
     # AI 서버 (명세: POST /analysis/image, POST /resources ...)
     AI_API_BASE: str = Field(
         "http://localhost:8001",

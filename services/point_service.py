@@ -1,15 +1,15 @@
 # services/point_service.py
-from typing import Tuple, Dict, Any
+from typing import Tuple, Dict, Any, List
 from sqlalchemy.orm import Session
 from sqlalchemy import select, func    
 from models.point import PointWallet, PointLedger
 
 _LEVEL_TABLE = [
     (0,    "새싹 탐험가"),      # Lv1
-    (100,  "씨앗 수호자"),      # Lv2
-    (300,  "지구 지킴이"),      # Lv3
-    (600,  "순환 장인"),        # Lv4
-    (1000, "지구 영웅"),        # Lv5
+    (1000,  "씨앗 수호자"),      # Lv2
+    (3000,  "지구 지킴이"),      # Lv3
+    (6000,  "순환 장인"),        # Lv4
+    (10000, "지구 영웅"),        # Lv5
 ]
 
 def _calc_level_info(balance: int) -> Tuple[int, str]:
@@ -54,7 +54,7 @@ def get_lifetime_earned(db: Session, user_id: int) -> int:
 def get_balance_status(db: Session, user_id: int) -> Dict[str, Any]:
     balance = get_balance(db, user_id)
     lifetime = get_lifetime_earned(db, user_id)
-    level_num, level_title = _calc_level_info(balance)
+    level_num, level_title = _calc_level_info(lifetime) 
 
     return {
         "balance": balance,
@@ -73,14 +73,23 @@ def get_history(db: Session, user_id: int, limit: int = 20, before_id: int | Non
     next_before_id = rows[-1].id if rows and len(rows) == limit else None
     return rows, next_before_id
 
+def get_all(db: Session, user_id: int) -> List[PointLedger]:
+    stmt = (
+        select(PointLedger)
+        .where(PointLedger.user_id == user_id)
+        .order_by(PointLedger.id.desc())
+    )
+    return list(db.execute(stmt).scalars())
+
 
 def award(
     db: Session,
     user_id: int,
     amount: int,
-    reason: str,
     ref_type: str | None = None,
     ref_id: str | None = None,
+    item_title: str | None = None,
+    item_amount: float | None = None,
     idempotency_key: str | None = None,
 ) -> int:
     if amount == 0:
@@ -101,11 +110,13 @@ def award(
     entry = PointLedger(
         user_id=user_id,
         delta=int(amount),
-        reason=reason,
         ref_type=ref_type,
         ref_id=str(ref_id) if ref_id is not None else None,
+        item_title=item_title,      
+        item_amount=item_amount,   
         idempotency_key=idempotency_key,
     )
     db.add(entry)
     db.flush()
     return int(wallet.balance)
+

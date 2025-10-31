@@ -13,9 +13,9 @@ class Request(Base):
     wanted_item = Column(String(100), nullable=False, index=True)
     material_type = Column(String(50), index=True)
     desired_amount = Column(Float, nullable=False)
-    unit = Column(String(10), nullable=False, index=True)
     description = Column(Text)
-    status = Column(String(20), default="open", index=True)  # open | matched | completed
+    image_path = Column(String(255))
+    status = Column(String(20), default="pending", index=True)  # pending | completed
 
     created_at = Column(DateTime, default=datetime.utcnow)
 

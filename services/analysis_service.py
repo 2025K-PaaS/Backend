@@ -10,9 +10,7 @@ from models.analysis import Analysis
 
 UPLOAD_DIR = Path("uploads/analysis")
 MAX_SIZE = 5 * 1024 * 1024  # 5MB
-
 AI_ANALYZE_URL = f"{settings.AI_API_BASE.rstrip('/')}/analysis/image"
-LOCAL_ANALYSIS_PREFIX = "anl_local_" 
 
 def _ensure_dir() -> None:
     UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
@@ -67,20 +65,32 @@ def call_ai_and_save(db: Session, username: str, file: UploadFile) -> Analysis:
     )
     resp.raise_for_status()
     j = resp.json()
-
-    ai_id = j.get("analysis_id")
-    if not ai_id:
-        ai_id = f"{LOCAL_ANALYSIS_PREFIX}{uuid4().hex}"
+    analysis_id = j.get("analysis_id")
+    if not analysis_id:
+        raise ValueError("AI 응답에 analysis_id가 없습니다.")
 
     anal = Analysis(
-        ai_analysis_id=ai_id,          
+        ai_analysis_id=analysis_id,
         username=username,
         detected_item=j.get("detected_item"),
         material_type=j.get("material_type"),
         suggested_title=j.get("suggested_title"),
         image_path=local_path,
+        estimated_value=j.get("estimated_value"),
     )
+    
     db.add(anal)
     db.commit()
     db.refresh(anal)
     return anal
+
+
+def get_analysis_by_id(db: Session, username: str, analysis_id: str) -> Analysis | None:
+    return (
+        db.query(Analysis)
+        .filter(
+            Analysis.ai_analysis_id == analysis_id,
+            Analysis.username == username,
+        )
+        .first()
+    )
