@@ -1,7 +1,7 @@
 ---
 
 <p align="center">
-  <img src="https://k-paas.dajeong.shop/uploads/logo-eeum.png" width="110" alt="Project banner" />
+  <img src="https://github.com/organizations/2025K-PaaS/settings/profile" width="110" alt="Project banner" />
 </p>
 
 <h1 align="center">eeum • Backend</h1>
